@@ -1,0 +1,63 @@
+﻿@{
+	ViewBag.Title = "Home Page";
+}
+
+<div class="row">
+	<div class="col-md-12">
+		<p>
+			<br /><br />
+			<a class="btn btn-danger" id="sendEmail" onclick="sendEmail()" style="cursor:pointer;">Send Email</a>
+			<br />
+			<br />
+			<h2 id="progress"></h2>
+		</p>
+	</div>
+</div>
+
+@section scripts
+{
+<script>
+	var emailHub = null;
+	$(function () {
+		emailHub = $.connection.emailHub;
+
+		emailHub.client.emailSent = function (emailId) {
+			console.log('Received data for snippet #' + emailId);
+			toggleProgress(false);
+		};
+
+		$.connection.hub.start().done(function () {
+			console.log('Connection with the hub established!');
+		});
+	});
+
+	function sendEmail() {
+		var emailId = Math.floor(Math.random() * 20);
+		emailHub.server.subscribe(emailId);
+		$.get('/home/sendemail?emailId=' + emailId);
+		toggleProgress(true);
+	}
+
+	var progressHandle = null
+	function toggleProgress(start) {
+		if (start) {
+			$('#progress').text('Sending email...');
+			showProgress();
+		} else {
+			clearTimeout(progressHandle);
+			$('#progress').text('Email sent!');
+			setTimeout("$('#progress').text('');", 3000);
+		}
+	}
+
+	function showProgress() {
+		if (progressHandle) {
+			clearTimeout(progressHandle);
+		}
+		progressHandle = setTimeout(function () {
+			$('#progress').text($('#progress').text() + '.');
+			showProgress();
+		}, 100);
+	}
+</script>
+}
